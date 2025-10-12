@@ -3,21 +3,20 @@ use bindings::{VkInstance, VkInstanceCreateInfo};
 use interfaces::cstr_ptr;
 use interfaces::graphics::driver::{GpuInterface};
 use interfaces::graphics::errors::{GpuError, GpuResult};
-use crate::bindings::{vkCreateInstance, vkDestroyInstance, VkApplicationInfo, VkInstance_T, VkResult_VK_SUCCESS};
+use crate::bindings::*;
 
 #[allow(warnings)]
 mod bindings;
 
 pub struct Vulkan {
 	app_info: *mut VkInstanceCreateInfo,
-	instance: *mut VkInstance,
+	instance: Vec<VkInstance>
 }
 
 impl Vulkan {
 	pub fn init(ext_count: c_uint, extensions: Vec<*const c_char>) -> GpuResult<Vulkan> {
 		let app_info = std::ptr::null_mut();
-		let mut instance: VkInstance = std::ptr::null_mut();
-		let instance: *mut VkInstance = &mut instance;
+		let mut instance: Vec<VkInstance> = vec![std::ptr::null_mut()];
 
 		unsafe {
 			let application_info = VkApplicationInfo {
@@ -39,7 +38,7 @@ impl Vulkan {
 				enabledExtensionCount: ext_count,
 				ppEnabledExtensionNames: extensions.as_ptr(),
 			});
-			if vkCreateInstance(app_info, std::ptr::null(), instance) != VkResult_VK_SUCCESS {
+			if vkCreateInstance(app_info, std::ptr::null(), instance.as_mut_ptr()) != VkResult_VK_SUCCESS {
 				return Err(GpuError("failed to create Vulkan instance".to_string()));
 			}
 		}
@@ -53,10 +52,12 @@ impl Vulkan {
 impl GpuInterface for Vulkan {
 	fn close(self) {
 		unsafe {
-			if !self.instance.is_null() {
-				vkDestroyInstance(*self.instance, std::ptr::null());
-			} else {
-				println!("Why vkInstance null?")
+			for instance in self.instance {
+				if !instance.is_null() {
+					vkDestroyInstance(instance, std::ptr::null());
+				} else {
+					println!("Why vkInstance null?")
+				}
 			}
 		}
 	}
