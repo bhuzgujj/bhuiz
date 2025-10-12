@@ -1,0 +1,8 @@
+[package]
+name = "vulkan-sdl"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+interfaces.workspace = true
+sdl = { workspace = true }

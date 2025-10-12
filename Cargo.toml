@@ -1,0 +1,14 @@
+[workspace]
+members = [
+    "libs/interfaces",
+    "libs/vulkan",
+    "libs/sdl", "samples/vulkan-sdl",
+]
+resolver = "2"
+
+[workspace.dependencies]
+interfaces = { path = "libs/interfaces" }
+vulkan = { path = "libs/vulkan" }
+sdl = { path = "libs/sdl" }
+
+bindgen = "0.72.1"

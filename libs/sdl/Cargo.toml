@@ -1,0 +1,15 @@
+[package]
+name = "sdl"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = [ "vulkan" ]
+vulkan = []
+
+[dependencies]
+interfaces.workspace = true
+vulkan.workspace = true
+
+[build-dependencies]
+bindgen.workspace = true
