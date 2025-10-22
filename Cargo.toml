@@ -1,14 +1,26 @@
 [workspace]
 members = [
     "libs/interfaces",
-    "libs/vulkan",
-    "libs/sdl", "samples/vulkan-sdl",
+
+    # Gpu API Wrappers
+    "libs/gpu/vulkan",
+
+    # Media Adapter
+    "libs/sdl",
+
+    # Samples
+    "samples/vulkan-sdl",
 ]
 resolver = "2"
 
 [workspace.dependencies]
+# internaals
 interfaces = { path = "libs/interfaces" }
-vulkan = { path = "libs/vulkan" }
+gpu-vulkan = { path = "libs/gpu/vulkan" }
 sdl = { path = "libs/sdl" }
 
+# third party
 bindgen = "0.72.1"
+chrono = "0.4.42"
+colored = "3.0.0"
+log = "0.4.28"

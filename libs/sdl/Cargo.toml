@@ -4,12 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [features]
-default = [ "vulkan" ]
-vulkan = []
+none = []
+vulkan = ["gpu-vulkan"]
 
 [dependencies]
 interfaces.workspace = true
-vulkan.workspace = true
+gpu-vulkan = { workspace = true, optional = true }
+
+log.workspace = true
 
 [build-dependencies]
 bindgen.workspace = true

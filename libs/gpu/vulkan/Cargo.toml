@@ -1,10 +1,11 @@
 [package]
-name = "vulkan"
+name = "gpu-vulkan"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 interfaces.workspace = true
+log.workspace = true
 
 [build-dependencies]
 bindgen.workspace = true
