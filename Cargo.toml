@@ -1,26 +1,22 @@
-[workspace]
-members = [
-    "libs/interfaces",
+[package]
+name = "bhuiz"
+version = "0.1.0"
+edition = "2024"
 
-    # Gpu API Wrappers
-    "libs/gpu/vulkan",
+[[bin]]
+name = "vulkan_sdl"
+required-features = ["vulkan", "sdl"]
 
-    # Media Adapter
-    "libs/sdl",
+[features]
+vulkan = []
+sdl = []
 
-    # Samples
-    "samples/vulkan-sdl",
-]
-resolver = "2"
+[dependencies]
+# Internal
+bhomz = { git = "https://github.com/bhuzgujj/bhomz.git", tag = "0.1.0" }
 
-[workspace.dependencies]
-# internaals
-interfaces = { path = "libs/interfaces" }
-gpu-vulkan = { path = "libs/gpu/vulkan" }
-sdl = { path = "libs/sdl" }
-
-# third party
-bindgen = "0.72.1"
-chrono = "0.4.42"
-colored = "3.0.0"
+# Third party
 log = "0.4.28"
+
+[build-dependencies]
+bindgen = "0.72.1"
