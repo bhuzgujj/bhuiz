@@ -2,3 +2,4 @@ target
 .idea
 src/bindings.rs
 .binding_version
+.env

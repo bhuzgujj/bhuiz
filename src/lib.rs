@@ -1,5 +1,7 @@
-use bhomz::error::BhomzResult;
 use crate::media::Media;
+use bhomz::spacial::two_dimension::Dimension;
+use std::time::Duration;
+use bhomz::error::BhomzThrowable;
 
 /// Generated code from header files of selected features
 #[allow(warnings)]
@@ -8,29 +10,20 @@ pub(crate) mod bindings;
 
 mod gpu;
 mod media;
+mod event;
+mod enclosed_value;
 
-pub struct Bhuiz {
-	pub is_running: bool,
-	media: Media,
+pub mod constants {
+	pub use crate::media::constants::UNDEFINED_WINDOW_POSITION;
 }
 
-impl Bhuiz {
-	pub fn new(app_name: &str) -> BhomzResult<Self> {
-		Ok(Self {
-			is_running: true,
-			media: Media::new(app_name)?,
-		})
-	}
+pub fn start(
+	app_name: &str,
+	frame_rate: Duration,
+	window_dimension: Dimension<i32>
+) -> BhomzThrowable {
+	let mut media = Media::new(app_name, window_dimension, frame_rate).expect("Failed to create media.");
+	let _ = media.start_event_thread();
 
-	pub fn process_io(&mut self) {
-		todo!("process io")
-	}
-
-	pub fn draw(&mut self) {
-		todo!("draw")
-	}
-
-	pub fn close(self) {
-		self.media.close()
-	}
+	media.start_drawing_loop()
 }

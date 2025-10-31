@@ -11,6 +11,5 @@ impl Gpu {
 	}
 
 	pub fn close(self) {
-		todo!("close")
 	}
 }

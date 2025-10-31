@@ -5,15 +5,16 @@ edition = "2024"
 
 [[bin]]
 name = "vulkan_sdl"
-required-features = ["vulkan", "sdl"]
+required-features = ["vulkan", "sdl", "debug"]
 
 [features]
+debug = []
 vulkan = []
 sdl = []
 
 [dependencies]
 # Internal
-bhomz = { git = "https://github.com/bhuzgujj/bhomz.git", tag = "0.1.0" }
+bhomz = { git = "https://github.com/bhuzgujj/bhomz.git", tag = "1.0.0" }
 
 # Third party
 log = "0.4.28"

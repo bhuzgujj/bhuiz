@@ -1,13 +1,20 @@
+use std::time::Duration;
 use bhomz::logger::bind_logger;
-use bhuiz::Bhuiz;
+use bhomz::spacial::two_dimension::Dimension;
+use bhuiz::constants::UNDEFINED_WINDOW_POSITION;
 use log::LevelFilter;
 
 fn main() {
 	bind_logger(LevelFilter::Debug, None).expect("Failed to bind logger");
-	let mut bhuiz = Bhuiz::new("Vulkan/SDL Sample").expect("Failed to create Bhuiz");
-	while bhuiz.is_running {
-		bhuiz.process_io();
-		bhuiz.draw();
-	}
-	bhuiz.close()
+	let dimension = Dimension {
+		x: UNDEFINED_WINDOW_POSITION as i32,
+		y: UNDEFINED_WINDOW_POSITION as i32,
+		width: 1200,
+		height: 600,
+	};
+	bhuiz::start(
+		"Vulkan/SDL Sample",
+		Duration::from_millis(1000 / 60),
+		dimension
+	).unwrap()
 }

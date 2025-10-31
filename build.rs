@@ -6,28 +6,27 @@ use std::path::PathBuf;
 
 const VERSION_FILE_NAME: &str = ".binding_version";
 
-fn need_rebuild() -> bool {
+fn need_rebuild(headers_directory: &HashSet<String>, header_paths: &Vec<String>) -> bool {
 	let path = PathBuf::from(VERSION_FILE_NAME);
 	if path.exists() && path.is_file() {
 		if let Ok(ctnt) = read_to_string(path) {
-			return get_current_version() == ctnt;
+			return get_current_version(headers_directory, header_paths) != ctnt;
 		}
 	}
 	true
 }
 
-fn get_current_version() -> String {
-	let mut version = Vec::new();
-
-	#[cfg(feature = "vulkan")]
-	version.push("vulkan");
-
-	#[cfg(feature = "sdl")]
-	version.push("sdl");
-
-	version.push(env!("CARGO_PKG_VERSION"));
-
-	version.join("-")
+fn get_current_version(headers_directory: &HashSet<String>, header_paths: &Vec<String>) -> String {
+	format!(
+		"{}\n\n{}\n\n{}",
+		[
+			#[cfg(feature = "vulkan")] "vulkan",
+			#[cfg(feature = "sdl")] "sdl",
+			env!("CARGO_PKG_VERSION")
+		].join("-"),
+		headers_directory.iter().map(|e| e.to_string()).collect::<Vec<String>>().join("\n"),
+		header_paths.iter().map(|e| e.to_string()).collect::<Vec<String>>().join("\n"),
+	)
 }
 
 fn parse_dotenv() -> HashMap<String, String> {
@@ -61,14 +60,13 @@ fn parse_dotenv() -> HashMap<String, String> {
 }
 
 fn main() {
-	println!("cargo:rerun-if-changed=build.rs");
 	let dotenv = parse_dotenv();
 	let mut link: HashMap<String, HashSet<String>> = HashMap::new();
 	let mut headers_directory = HashSet::new();
 	let mut header_paths: Vec<String> = Vec::new();
 
 	#[cfg(feature = "vulkan")]
-	create_vulkan_bindings(
+	add_vulkan_bindings(
 		&dotenv,
 		&mut link,
 		&mut headers_directory,
@@ -76,23 +74,38 @@ fn main() {
 	);
 
 	#[cfg(feature = "sdl")]
-	create_sdl_bindings(
+	add_sdl_bindings(
 		&dotenv,
 		&mut link,
 		&mut headers_directory,
 		&mut header_paths
 	);
 
-	if need_rebuild() {
-		let bindings = bindgen::Builder::default()
-			.headers(header_paths)
-			.clang_args(headers_directory.iter().map(|p| format!("-I{}", &p)).collect::<Vec<String>>())
-			.generate()
-			.expect("Unable to generate bindings");
+	if need_rebuild(&headers_directory, &header_paths) {
+		let mut bindings = bindgen::Builder::default()
+			.headers(&header_paths)
+			.clang_args(&headers_directory.iter().map(|p| format!("-I{}", &p)).collect::<Vec<String>>());
+
+		// Derive macro are experimental on assign expressions
+		if env::var("CARGO_FEATURE_DEBUG").is_ok() {
+			bindings = bindings.derive_debug(true);
+		}
 
 		bindings
+			.generate()
+			.expect("Unable to generate bindings")
 			.write_to_file("src/bindings.rs")
 			.expect("Couldn't write bindings!");
+
+		let path = PathBuf::from(VERSION_FILE_NAME);
+		OpenOptions::new()
+			.create(true)
+			.write(true)
+			.truncate(true)
+			.open(&path)
+			.unwrap_or_else(|_| panic!("Unable to access file '{}'", path.display()))
+			.write_all(get_current_version(&headers_directory, &header_paths).as_bytes())
+			.unwrap_or_else(|_| panic!("Unable to write version to '{}'", path.display()));
 	}
 
 	for (lib_dir, libs) in link {
@@ -101,20 +114,10 @@ fn main() {
 			println!("cargo:rustc-link-lib={libs}");
 		}
 	}
-
-	let path = PathBuf::from(VERSION_FILE_NAME);
-	OpenOptions::new()
-		.create(true)
-		.write(true)
-		.truncate(true)
-		.open(&path)
-		.expect(format!("Unable to access file '{}'", path.display()).as_str())
-		.write(get_current_version().as_bytes())
-		.expect(format!("Unable to write version to '{}'", path.display()).as_str());
 }
 
 #[allow(warnings)]
-fn create_vulkan_bindings(
+fn add_vulkan_bindings(
 	path: &HashMap<String, String>,
 	link: &mut HashMap<String, HashSet<String>>,
 	headers_directory: &mut HashSet<String>,
@@ -125,6 +128,7 @@ fn create_vulkan_bindings(
 	headers_directory.insert(header_dir.clone());
 	header_paths.push(format!("{}/vulkan/vulkan.h", header_dir));
 	header_paths.push(format!("{}/vulkan/vulkan_core.h", header_dir));
+	header_paths.push(format!("{}/vulkan/vk_enum_string_helper.h", header_dir));
 	if !link.contains_key(lib_dir) {
 		link.insert(lib_dir.clone(), HashSet::new());
 	}
@@ -133,7 +137,7 @@ fn create_vulkan_bindings(
 }
 
 #[allow(warnings)]
-fn create_sdl_bindings(
+fn add_sdl_bindings(
 	path: &HashMap<String, String>,
 	link: &mut HashMap<String, HashSet<String>>,
 	headers_directory: &mut HashSet<String>,
